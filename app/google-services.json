@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "431838809516",
+    "project_id": "bakerytracker-24d04",
+    "storage_bucket": "bakerytracker-24d04.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431838809516:android:4903d4bc0fc5f1afc9be09",
+        "android_client_info": {
+          "package_name": "com.example.bakeryapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7MmRWBTStgyMQF0X38IBHgWacMfJ7HK8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
