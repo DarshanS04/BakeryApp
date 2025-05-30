@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         // Manager Dashboard Button
         binding.managerDashboard.setOnClickListener(v -> {
             Log.d("MainActivity", "Navigating to ManagerDashboard");
-            Intent intent = new Intent(MainActivity.this, ManagerDashboard.class);
+            Intent intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
         });
