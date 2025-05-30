@@ -17,12 +17,21 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MenuViewHolder
     private List<Product> products;
     private Map<String, Integer> productPrices;
     private Map<String, Integer> productImageResIds;
+    private boolean showSales = false;
 
     public MenuAdapter(Context context, List<Product> products, Map<String, Integer> productPrices, Map<String, Integer> productImageResIds) {
         this.context = context;
         this.products = products;
         this.productPrices = productPrices;
         this.productImageResIds = productImageResIds;
+    }
+
+    public MenuAdapter(Context context, List<Product> products, Map<String, Integer> productPrices, Map<String, Integer> productImageResIds, boolean showSales) {
+        this.context = context;
+        this.products = products;
+        this.productPrices = productPrices;
+        this.productImageResIds = productImageResIds;
+        this.showSales = showSales;
     }
 
     @NonNull
@@ -40,7 +49,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MenuViewHolder
         // Set product details
         holder.productName.setText(productName);
         holder.productPrice.setText("₹" + productPrices.getOrDefault(productName, 0));
-        holder.productQuantity.setText("Available: " + product.getQuantity());
+        holder.productQuantity.setText(showSales ? "Sold: " + product.getQuantity() : "Available: " + product.getQuantity());
 
         // Set image
         Integer imageResId = productImageResIds.get(productName);

@@ -63,11 +63,9 @@ public class CustomerDashboard extends AppCompatActivity {
 
 
         binding.recommendationButton.setOnClickListener(v -> {
-            Log.d("CustomerDashboard", "Recommendation button clicked");
-            Toast.makeText(this, "Recommendation feature not implemented yet", Toast.LENGTH_SHORT).show();
-            // Intent intent = new Intent(this, RecommendationActivity.class);
-            // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            // startActivity(intent);
+            Log.d("CustomerDashboard", "Navigating to RecommendationActivity");
+            Intent intent = new Intent(this, RecommendationActivity.class);
+            startActivity(intent);
         });
 
         binding.logoutButton.setOnClickListener(v -> {
