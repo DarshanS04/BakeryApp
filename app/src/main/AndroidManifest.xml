@@ -30,6 +30,7 @@
         <activity android:name=".CustomerDashboard" />
         <activity android:name=".MainActivity" />
         <activity android:name=".DistributorRetailOrdersActivity" />
+        <activity android:name=".OrderProductActivity" />
 
 
 

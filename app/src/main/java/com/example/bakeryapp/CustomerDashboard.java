@@ -2,75 +2,86 @@ package com.example.bakeryapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.bakeryapp.databinding.ActivityCustomerDashboardBinding;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class CustomerDashboard extends AppCompatActivity {
 
     private ActivityCustomerDashboardBinding binding;
     private FirebaseAuth mAuth;
-    private FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("CustomerDashboard", "onCreate called");
 
         // Initialize View Binding
         binding = ActivityCustomerDashboardBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Initialize Firebase Authentication and Firestore
+        // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
-        firestore = FirebaseFirestore.getInstance();
 
-        // Verify user role
-        if (mAuth.getCurrentUser() != null) {
-            String userId = mAuth.getCurrentUser().getUid();
-            firestore.collection("users").document(userId)
-                    .get()
-                    .addOnSuccessListener(document -> {
-                        if (document.exists() && "Customer".equals(document.getString("role"))) {
-                            // User is a Customer, proceed with dashboard setup
-                            setupDashboard();
-                        } else {
-                            Toast.makeText(CustomerDashboard.this,
-                                    "Access denied: Not a Customer",
-                                    Toast.LENGTH_SHORT).show();
-                            navigateToSignIn();
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(CustomerDashboard.this,
-                                "Error verifying role: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                        navigateToSignIn();
-                    });
-        } else {
-            Toast.makeText(CustomerDashboard.this,
-                    "User not authenticated",
-                    Toast.LENGTH_SHORT).show();
-            navigateToSignIn();
+        // Check authentication (no role check)
+        if (mAuth.getCurrentUser() == null) {
+            Log.e("CustomerDashboard", "User not authenticated");
+            Toast.makeText(this, "Please sign in to access the dashboard", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
         }
-    }
 
-    private void setupDashboard() {
-        // Menu Button Listener
-        binding.customerMenu.setOnClickListener(v -> {
-            //intent
+        // Set up button listeners
+        binding.orderProductButton.setOnClickListener(v -> {
+            Log.d("CustomerDashboard", "Navigating to OrderProductActivity");
+            Intent intent = new Intent(this, OrderProductActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
         });
 
-        // Orders Button Listener
-        binding.customerOrders.setOnClickListener(v -> {
-           //intent
+        binding.menuButton.setOnClickListener(v -> {
+            Log.d("CustomerDashboard", "Menu button clicked");
+            Toast.makeText(this, "Menu feature not implemented yet", Toast.LENGTH_SHORT).show();
+            // Intent intent = new Intent(this, MenuActivity.class);
+            // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            // startActivity(intent);
         });
-    }
 
-    private void navigateToSignIn() {
-        Intent intent = new Intent(CustomerDashboard.this, SignInActivity.class);
-        startActivity(intent);
-        finish();
+        binding.orderHistoryButton.setOnClickListener(v -> {
+            Log.d("CustomerDashboard", "Order History button clicked");
+            Toast.makeText(this, "Order History feature not implemented yet", Toast.LENGTH_SHORT).show();
+            // Intent intent = new Intent(this, OrderHistoryActivity.class);
+            // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            // startActivity(intent);
+        });
+
+        binding.giveFeedbackButton.setOnClickListener(v -> {
+            Log.d("CustomerDashboard", "Give Feedback button clicked");
+            Toast.makeText(this, "Give Feedback feature not implemented yet", Toast.LENGTH_SHORT).show();
+            // Intent intent = new Intent(this, GiveFeedbackActivity.class);
+            // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            // startActivity(intent);
+        });
+
+        binding.recommendationButton.setOnClickListener(v -> {
+            Log.d("CustomerDashboard", "Recommendation button clicked");
+            Toast.makeText(this, "Recommendation feature not implemented yet", Toast.LENGTH_SHORT).show();
+            // Intent intent = new Intent(this, RecommendationActivity.class);
+            // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            // startActivity(intent);
+        });
+
+        binding.logoutButton.setOnClickListener(v -> {
+            Log.d("CustomerDashboard", "Logout clicked");
+            mAuth.signOut();
+            Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, SignInActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
     }
 }
