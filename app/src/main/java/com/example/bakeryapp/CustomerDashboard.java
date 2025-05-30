@@ -43,11 +43,9 @@ public class CustomerDashboard extends AppCompatActivity {
         });
 
         binding.menuButton.setOnClickListener(v -> {
-            Log.d("CustomerDashboard", "Menu button clicked");
-            Toast.makeText(this, "Menu feature not implemented yet", Toast.LENGTH_SHORT).show();
-            // Intent intent = new Intent(this, MenuActivity.class);
-            // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            // startActivity(intent);
+            Log.d("CustomerDashboard", "Navigating to MenuActivity");
+            Intent intent = new Intent(this, MenuActivity.class);
+            startActivity(intent);
         });
 
         binding.orderHistoryButton.setOnClickListener(v -> {
