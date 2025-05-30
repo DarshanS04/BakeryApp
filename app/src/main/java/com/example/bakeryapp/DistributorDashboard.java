@@ -62,6 +62,14 @@ public class DistributorDashboard extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+
+        binding.distributorRetailOrder.setOnClickListener(v -> {
+            Log.d("DistributorDashboard", "Navigating to DistributorRetailOrders");
+            Intent intent = new Intent(DistributorDashboard.this, DistributorRetailOrdersActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+        });
+
     }
 
     private void navigateToSignIn() {

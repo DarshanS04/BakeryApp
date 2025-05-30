@@ -29,6 +29,7 @@
         <activity android:name=".DistributorDashboard" />
         <activity android:name=".CustomerDashboard" />
         <activity android:name=".MainActivity" />
+        <activity android:name=".DistributorRetailOrdersActivity" />
 
 
 
