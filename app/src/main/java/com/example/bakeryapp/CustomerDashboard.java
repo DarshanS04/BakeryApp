@@ -55,12 +55,12 @@ public class CustomerDashboard extends AppCompatActivity {
         });
 
         binding.giveFeedbackButton.setOnClickListener(v -> {
-            Log.d("CustomerDashboard", "Give Feedback button clicked");
-            Toast.makeText(this, "Give Feedback feature not implemented yet", Toast.LENGTH_SHORT).show();
-            // Intent intent = new Intent(this, GiveFeedbackActivity.class);
-            // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            // startActivity(intent);
+            Log.d("CustomerDashboard", "Navigating to FeedbackActivity");
+            Intent intent = new Intent(this, FeedbackActivity.class);
+            startActivity(intent);
         });
+
+
 
         binding.recommendationButton.setOnClickListener(v -> {
             Log.d("CustomerDashboard", "Recommendation button clicked");

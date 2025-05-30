@@ -33,6 +33,7 @@
         <activity android:name=".OrderProductActivity" />
         <activity android:name=".MenuActivity" />
         <activity android:name=".OrderHistoryActivity" />
+        <activity android:name=".FeedbackActivity" />
 
 
 
