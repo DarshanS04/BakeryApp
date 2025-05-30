@@ -3,7 +3,6 @@ package com.example.bakeryapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.bakeryapp.databinding.ActivitySignInBinding;
@@ -25,15 +24,9 @@ public class SignInActivity extends AppCompatActivity {
         // Initialize Firebase Authentication
         firebaseAuth = FirebaseAuth.getInstance();
 
-        // Set up Spinner with roles
-        String[] roles = {"Customer", "Manager", "Distributor"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, roles);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.roleSpinner.setAdapter(adapter);
-
         // Navigate to SignUpActivity
         binding.textView.setOnClickListener(v -> {
+            Log.d("SignInActivity", "Navigating to SignUpActivity");
             Intent intent = new Intent(SignInActivity.this, SignUpActivity.class);
             startActivity(intent);
             finish(); // Close SignInActivity when going to SignUpActivity
@@ -41,6 +34,7 @@ public class SignInActivity extends AppCompatActivity {
 
         // Navigate to ForgotPasswordActivity
         binding.forgotPass.setOnClickListener(v -> {
+            Log.d("SignInActivity", "Navigating to ForgotPasswordActivity");
             Intent intent = new Intent(SignInActivity.this, ForgotPasswordActivity.class);
             startActivity(intent);
         });
@@ -50,29 +44,14 @@ public class SignInActivity extends AppCompatActivity {
             Log.d("SignInActivity", "Sign-in button clicked");
             String email = binding.emailEt.getText().toString().trim();
             String pass = binding.passET.getText().toString().trim();
-            String selectedRole = binding.roleSpinner.getSelectedItem().toString();
 
             if (!email.isEmpty() && !pass.isEmpty()) {
                 firebaseAuth.signInWithEmailAndPassword(email, pass)
                         .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
                                 Log.d("SignInActivity", "Sign-in successful");
-                                Intent intent;
-                                // Navigate based on selected role
-                                switch (selectedRole) {
-                                    case "Customer":
-                                        intent = new Intent(SignInActivity.this, CustomerDashboard.class);
-                                        break;
-                                    case "Manager":
-                                        intent = new Intent(SignInActivity.this, ManagerDashboard.class);
-                                        break;
-                                    case "Distributor":
-                                        intent = new Intent(SignInActivity.this, DistributorDashboard.class);
-                                        break;
-                                    default:
-                                        intent = new Intent(SignInActivity.this, CustomerDashboard.class); // Fallback
-                                        break;
-                                }
+                                Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                                 startActivity(intent);
                                 finish(); // Close SignInActivity on successful sign-in
                             } else {
@@ -96,9 +75,9 @@ public class SignInActivity extends AppCompatActivity {
 
         // Check if user is already signed in
         if (firebaseAuth.getCurrentUser() != null) {
-            // Optionally, you could retrieve the user's role from Firebase or elsewhere
-            // For simplicity, navigate to CustomerDashboard as a default
-            Intent intent = new Intent(SignInActivity.this, CustomerDashboard.class);
+            Log.d("SignInActivity", "User already signed in, navigating to MainActivity");
+            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
             finish(); // Close SignInActivity if already signed in
         }
