@@ -40,6 +40,10 @@
         <activity android:name=".InventoryActivity" />
         <activity android:name=".AddInventoryActivity" />
 
+        <activity android:name=".ExpensesActivity" />
+        <activity android:name=".AddExpenseActivity" />
+
+
 
 
     </application>
