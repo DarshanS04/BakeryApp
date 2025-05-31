@@ -37,7 +37,7 @@ public class ManagerDashboardActivity extends AppCompatActivity {
        // binding.overviewButton.setOnClickListener(v -> startActivity(new Intent(this, OverviewActivity.class)));
         binding.inventoryButton.setOnClickListener(v -> startActivity(new Intent(this, InventoryActivity.class)));
         binding.expensesButton.setOnClickListener(v -> startActivity(new Intent(this, ExpensesActivity.class)));
-       // binding.ordersButton.setOnClickListener(v -> startActivity(new Intent(this, OrdersActivity.class)));
+        binding.ordersButton.setOnClickListener(v -> startActivity(new Intent(this, ManagerOrdersActivity.class)));
        // binding.retailOrdersButton.setOnClickListener(v -> startActivity(new Intent(this, RetailOrdersActivity.class)));
        // binding.expiryButton.setOnClickListener(v -> startActivity(new Intent(this, ExpiryActivity.class)));
        // binding.feedbackButton.setOnClickListener(v -> startActivity(new Intent(this, FeedbackActivity.class)));
