@@ -1,32 +1,61 @@
 package com.example.bakeryapp;
 
 public class Feedback {
-    private String userId;
-    private String userEmail;
-    private float rating;
-    private String comments;
+    private String customerId;
+    private String customerEmail;
+    private int rating;
+    private String comment;
     private String timestamp;
 
-    // Default constructor for Firebase
-    public Feedback() {}
+    // Default constructor required for Firebase
+    public Feedback() {
+    }
 
-    public Feedback(String userId, String userEmail, float rating, String comments, String timestamp) {
-        this.userId = userId;
-        this.userEmail = userEmail;
+    public Feedback(String customerId, String customerEmail, int rating, String comment, String timestamp) {
+        this.customerId = customerId;
+        this.customerEmail = customerEmail;
         this.rating = rating;
-        this.comments = comments;
+        this.comment = comment;
         this.timestamp = timestamp;
     }
 
-    // Getters and setters
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
-    public String getUserEmail() { return userEmail; }
-    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
-    public float getRating() { return rating; }
-    public void setRating(float rating) { this.rating = rating; }
-    public String getComments() { return comments; }
-    public void setComments(String comments) { this.comments = comments; }
-    public String getTimestamp() { return timestamp; }
-    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(String customerId) {
+        this.customerId = customerId;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
 }

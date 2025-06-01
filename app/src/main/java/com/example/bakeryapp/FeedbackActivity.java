@@ -46,16 +46,17 @@ public class FeedbackActivity extends AppCompatActivity {
 
     private void submitFeedback() {
         // Validate rating
-        float rating = binding.ratingBar.getRating();
-        if (rating == 0) {
+        float ratingFloat = binding.ratingBar.getRating();
+        if (ratingFloat == 0) {
             Toast.makeText(this, "Please select a rating", Toast.LENGTH_SHORT).show();
             return;
         }
+        int rating = Math.round(ratingFloat); // Convert float to int
 
-        // Validate comments
-        String comments = binding.commentsEditText.getText().toString().trim();
-        if (comments.isEmpty()) {
-            Toast.makeText(this, "Please enter your comments", Toast.LENGTH_SHORT).show();
+        // Validate comment
+        String comment = binding.commentsEditText.getText().toString().trim();
+        if (comment.isEmpty()) {
+            Toast.makeText(this, "Please enter your comment", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -63,7 +64,7 @@ public class FeedbackActivity extends AppCompatActivity {
         String userId = mAuth.getCurrentUser().getUid();
         String userEmail = mAuth.getCurrentUser().getEmail();
         String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date());
-        Feedback feedback = new Feedback(userId, userEmail, rating, comments, timestamp);
+        Feedback feedback = new Feedback(userId, userEmail, rating, comment, timestamp);
 
         // Show progress bar
         binding.progressBar.setVisibility(View.VISIBLE);
