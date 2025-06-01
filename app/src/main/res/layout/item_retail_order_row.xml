@@ -3,27 +3,27 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:layout_marginBottom="8dp">
+    android:padding="8dp">
 
     <Spinner
         android:id="@+id/material_spinner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="2"
-        android:prompt="@string/select_material"/>
+        android:layout_marginEnd="8dp"/>
 
     <EditText
         android:id="@+id/material_quantity"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:inputType="number"
-        android:hint="Quantity"/>
+        android:hint="Quantity"
+        android:inputType="number"/>
 
     <Button
         android:id="@+id/remove_item_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="X"/>
+        android:text="Remove"/>
 
 </LinearLayout>

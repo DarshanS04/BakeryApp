@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Header -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,50 +13,55 @@
         android:textStyle="bold"
         android:layout_marginBottom="16dp"/>
 
-    <!-- Retail Order Form -->
-    <ScrollView
+    <LinearLayout
+        android:id="@+id/retail_order_items"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <!-- Initial item row added programmatically -->
+    </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/retail_order_items"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- Initial Item Row -->
-            <include layout="@layout/item_retail_order_row"/>
-
-        </LinearLayout>
-
-    </ScrollView>
-
-    <!-- Buttons -->
     <Button
         android:id="@+id/add_item_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Another Item"
-        android:layout_marginBottom="8dp"/>
+        android:text="Add Item"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"/>
 
     <Button
         android:id="@+id/place_order_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Place Order"/>
+        android:text="Place Order"
+        android:layout_marginBottom="16dp"/>
 
-    <!-- Order History Header -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Retail Orders History"
+        android:text="Order History"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"/>
 
-    <!-- Order History List -->
+    <ProgressBar
+        android:id="@+id/orders_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/empty_orders_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No orders found"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginBottom="8dp"/>
+
     <ListView
         android:id="@+id/retail_orders_list"
         android:layout_width="match_parent"

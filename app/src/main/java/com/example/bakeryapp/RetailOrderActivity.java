@@ -1,6 +1,7 @@
 package com.example.bakeryapp;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,11 +39,13 @@ public class RetailOrderActivity extends AppCompatActivity {
     private LinearLayout retailOrderItems;
     private Button addItemButton, placeOrderButton;
     private ListView retailOrdersList;
+    private TextView emptyOrdersText;
+    private ProgressBar ordersLoading;
     private DatabaseReference databaseReference;
     private FirebaseAuth auth;
     private List<Map<String, Object>> rawMaterials;
-    private List<Map<String, Object>> orderHistory;
-    private ArrayAdapter<Map<String, Object>> ordersAdapter;
+    private List<RetailOrder> orderHistory;
+    private ArrayAdapter<RetailOrder> ordersAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +61,8 @@ public class RetailOrderActivity extends AppCompatActivity {
         addItemButton = findViewById(R.id.add_item_button);
         placeOrderButton = findViewById(R.id.place_order_button);
         retailOrdersList = findViewById(R.id.retail_orders_list);
+        emptyOrdersText = findViewById(R.id.empty_orders_text);
+        ordersLoading = findViewById(R.id.orders_loading);
 
         // Initialize data lists
         rawMaterials = new ArrayList<>();
@@ -84,19 +90,21 @@ public class RetailOrderActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 rawMaterials.clear();
+                int index = 0;
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Map<String, Object> material = new HashMap<>();
-                    material.put("index", data.getKey());
+                    material.put("index", index++);
                     material.put("name", data.child("name").getValue(String.class));
                     material.put("price", data.child("price").getValue(String.class));
                     rawMaterials.add(material);
                 }
-                // Update all spinners
+                Log.d("RetailOrderActivity", "Loaded " + rawMaterials.size() + " raw materials");
                 updateAllSpinners();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("RetailOrderActivity", "Error loading raw materials: " + error.getMessage());
                 Toast.makeText(RetailOrderActivity.this, "Error loading raw materials: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -146,12 +154,11 @@ public class RetailOrderActivity extends AppCompatActivity {
             return;
         }
 
-        // Use user's email or UID as identifier
         String managerEmail = user.getEmail() != null ? user.getEmail() : user.getUid();
-        String managerName = user.getDisplayName() != null ? user.getDisplayName() : managerEmail;
+        List<RetailOrder.OrderItem> orderItems = new ArrayList<>();
+        double orderTotal = 0.0;
 
         // Collect order items
-        List<Map<String, Object>> orderItems = new ArrayList<>();
         for (int i = 0; i < retailOrderItems.getChildCount(); i++) {
             View itemView = retailOrderItems.getChildAt(i);
             Spinner materialSpinner = itemView.findViewById(R.id.material_spinner);
@@ -159,28 +166,52 @@ public class RetailOrderActivity extends AppCompatActivity {
 
             int selectedPosition = materialSpinner.getSelectedItemPosition();
             if (selectedPosition > 0 && !quantityInput.getText().toString().isEmpty()) {
-                Map<String, Object> item = new HashMap<>();
                 Map<String, Object> material = rawMaterials.get(selectedPosition - 1);
-                item.put("material", material.get("name"));
-                item.put("price", material.get("price"));
-                item.put("quantity", Integer.parseInt(quantityInput.getText().toString()));
+                int quantity;
+                try {
+                    quantity = Integer.parseInt(quantityInput.getText().toString());
+                    if (quantity <= 0) {
+                        Toast.makeText(this, "Quantity must be positive", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Invalid quantity", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String priceStr = (String) material.get("price");
+                double price = parsePrice(priceStr);
+                double itemTotal = price * quantity;
+
+                RetailOrder.OrderItem item = new RetailOrder.OrderItem(
+                        ((Number) material.get("index")).intValue(),
+                        (String) material.get("name"),
+                        priceStr,
+                        quantity,
+                        itemTotal
+                );
                 orderItems.add(item);
+                orderTotal += itemTotal;
             }
         }
 
         if (orderItems.isEmpty()) {
-            Toast.makeText(RetailOrderActivity.this, "Please add at least one item", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please add at least one item", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Create order object
-        Map<String, Object> newOrder = new HashMap<>();
-        newOrder.put("items", orderItems);
-        newOrder.put("managerId", user.getUid());
-        newOrder.put("managerName", managerName);
-        newOrder.put("managerEmail", managerEmail);
-        newOrder.put("status", "pending");
-        newOrder.put("timestamp", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date()));
+        String date = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date());
+        RetailOrder newOrder = new RetailOrder(
+                date,
+                orderItems,
+                managerEmail,
+                user.getUid(),
+                "Pending",
+                timestamp,
+                orderTotal
+        );
 
         // Save to Firebase
         DatabaseReference retailOrdersRef = databaseReference.child("retailOrders");
@@ -188,11 +219,20 @@ public class RetailOrderActivity extends AppCompatActivity {
             if (error == null) {
                 Toast.makeText(RetailOrderActivity.this, "Order placed successfully!", Toast.LENGTH_SHORT).show();
                 resetForm();
-                loadOrderHistory();
             } else {
+                Log.e("RetailOrderActivity", "Failed to place order: " + error.getMessage());
                 Toast.makeText(RetailOrderActivity.this, "Failed to place order: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private double parsePrice(String priceStr) {
+        if (priceStr == null) return 0.0;
+        try {
+            return Double.parseDouble(priceStr.replaceAll("[^0-9.]", ""));
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 
     private void resetForm() {
@@ -206,7 +246,7 @@ public class RetailOrderActivity extends AppCompatActivity {
     }
 
     private void setupOrderHistory() {
-        ordersAdapter = new ArrayAdapter<Map<String, Object>>(this, R.layout.item_retail_order, orderHistory) {
+        ordersAdapter = new ArrayAdapter<RetailOrder>(this, R.layout.item_retail_order, orderHistory) {
             @NonNull
             @Override
             public View getView(int position, View convertView, @NonNull ViewGroup parent) {
@@ -214,7 +254,7 @@ public class RetailOrderActivity extends AppCompatActivity {
                     convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_retail_order, parent, false);
                 }
 
-                Map<String, Object> order = orderHistory.get(position);
+                RetailOrder order = orderHistory.get(position);
 
                 TextView orderIdView = convertView.findViewById(R.id.order_id);
                 TextView orderDateView = convertView.findViewById(R.id.order_date);
@@ -225,41 +265,29 @@ public class RetailOrderActivity extends AppCompatActivity {
                 Button reorderButton = convertView.findViewById(R.id.reorder_button);
                 TextView rejectionReasonView = convertView.findViewById(R.id.rejection_reason);
 
-                String orderId = (String) order.get("id");
-                orderIdView.setText("Order ID: " + (orderId != null ? orderId.substring(Math.max(0, orderId.length() - 6)) : "N/A"));
+                orderIdView.setText("Order ID: " + (order.getId() != null ? order.getId().substring(Math.max(0, order.getId().length() - 6)) : "N/A"));
+                orderDateView.setText("Date: " + (order.getDate() != null ? order.getDate() : "Unknown"));
 
-                String timestamp = (String) order.get("timestamp");
-                String orderDate = timestamp != null ? timestamp.substring(0, 10) : "Unknown"; // Extract YYYY-MM-DD
-                orderDateView.setText("Date: " + orderDate);
-
-                List<Map<String, Object>> items = (List<Map<String, Object>>) order.get("items");
                 StringBuilder materials = new StringBuilder();
-                double totalCost = 0.0;
-                if (items != null) {
-                    for (Map<String, Object> item : items) {
-                        String material = (String) item.get("material");
-                        Number quantity = (Number) item.get("quantity");
-                        String priceStr = (String) item.get("price");
-                        double price = priceStr != null ? Double.parseDouble(priceStr.replaceAll("[^0-9.]", "")) : 0;
-                        materials.append(material).append(" (").append(quantity).append(")\n");
-                        totalCost += price * (quantity != null ? quantity.intValue() : 0);
+                if (order.getItems() != null) {
+                    for (RetailOrder.OrderItem item : order.getItems()) {
+                        materials.append(item.getMaterialName()).append(" (").append(item.getQuantity()).append(")\n");
                     }
                 }
                 orderMaterialsView.setText("Materials:\n" + (materials.length() > 0 ? materials.toString() : "N/A"));
-                orderTotalView.setText("Total: " + String.format(Locale.US, "%.2f", totalCost) + " rupees");
+                orderTotalView.setText("Total: " + String.format(Locale.US, "%.2f", order.getTotal()) + " rupees");
 
-                String status = (String) order.get("status");
-                orderStatusView.setText("Status: " + (status != null ? status : "N/A"));
-                orderStatusView.setTextColor(getStatusColor(status));
+                orderStatusView.setText("Status: " + (order.getStatus() != null ? order.getStatus() : "N/A"));
+                orderStatusView.setTextColor(getStatusColor(order.getStatus()));
 
-                cancelButton.setVisibility(status != null && status.equalsIgnoreCase("pending") ? View.VISIBLE : View.GONE);
-                reorderButton.setVisibility(status != null && status.equalsIgnoreCase("completed") ? View.VISIBLE : View.GONE);
-                rejectionReasonView.setVisibility(status != null && status.equalsIgnoreCase("rejected") && order.get("rejectionReason") != null ? View.VISIBLE : View.GONE);
+                cancelButton.setVisibility(order.getStatus() != null && order.getStatus().equalsIgnoreCase("Pending") ? View.VISIBLE : View.GONE);
+                reorderButton.setVisibility(order.getStatus() != null && order.getStatus().equalsIgnoreCase("Accepted") ? View.VISIBLE : View.GONE);
+                rejectionReasonView.setVisibility(order.getStatus() != null && order.getStatus().equalsIgnoreCase("Rejected") && order.getRejectionReason() != null ? View.VISIBLE : View.GONE);
                 if (rejectionReasonView.getVisibility() == View.VISIBLE) {
-                    rejectionReasonView.setText("Reason: " + order.get("rejectionReason"));
+                    rejectionReasonView.setText("Reason: " + order.getRejectionReason());
                 }
 
-                cancelButton.setOnClickListener(v -> cancelOrder(orderId));
+                cancelButton.setOnClickListener(v -> cancelOrder(order.getId()));
                 reorderButton.setOnClickListener(v -> reorderOrder(order));
 
                 return convertView;
@@ -273,7 +301,7 @@ public class RetailOrderActivity extends AppCompatActivity {
         if (status == null) return getResources().getColor(android.R.color.black);
         switch (status.toLowerCase()) {
             case "pending": return getResources().getColor(android.R.color.holo_orange_light);
-            case "completed": return getResources().getColor(android.R.color.holo_green_light);
+            case "accepted": return getResources().getColor(android.R.color.holo_green_light);
             case "rejected": return getResources().getColor(android.R.color.holo_red_light);
             case "cancelled": return getResources().getColor(android.R.color.darker_gray);
             default: return getResources().getColor(android.R.color.black);
@@ -285,27 +313,52 @@ public class RetailOrderActivity extends AppCompatActivity {
         if (user == null) {
             orderHistory.clear();
             ordersAdapter.notifyDataSetChanged();
+            emptyOrdersText.setVisibility(View.VISIBLE);
+            ordersLoading.setVisibility(View.GONE);
+            Log.e("RetailOrderActivity", "User not authenticated");
             Toast.makeText(this, "Please log in to view order history", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        Log.d("RetailOrderActivity", "Loading all orders for user: " + user.getUid());
+        ordersLoading.setVisibility(View.VISIBLE);
+        emptyOrdersText.setVisibility(View.GONE);
         databaseReference.child("retailOrders").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 orderHistory.clear();
+                int orderCount = 0;
+                Log.d("RetailOrderActivity", "Raw snapshot: " + snapshot.getValue());
                 for (DataSnapshot data : snapshot.getChildren()) {
-                    Map<String, Object> order = (Map<String, Object>) data.getValue();
-                    if (order != null && user.getUid().equals(order.get("managerId"))) {
-                        order.put("id", data.getKey());
-                        orderHistory.add(order);
+                    try {
+                        RetailOrder order = data.getValue(RetailOrder.class);
+                        if (order != null) {
+                            order.setId(data.getKey());
+                            orderHistory.add(order);
+                            orderCount++;
+                            Log.d("RetailOrderActivity", "Added order: " + order.getId() + ", Status: " + order.getStatus() + ", ManagerId: " + order.getManagerId());
+                        } else {
+                            Log.w("RetailOrderActivity", "Null order for key: " + data.getKey());
+                        }
+                    } catch (Exception e) {
+                        Log.e("RetailOrderActivity", "Error deserializing order " + data.getKey() + ": " + e.getMessage());
                     }
                 }
                 ordersAdapter.notifyDataSetChanged();
+                ordersLoading.setVisibility(View.GONE);
+                emptyOrdersText.setVisibility(orderHistory.isEmpty() ? View.VISIBLE : View.GONE);
+                Log.d("RetailOrderActivity", "Loaded " + orderCount + " orders");
+                if (orderHistory.isEmpty()) {
+                    Toast.makeText(RetailOrderActivity.this, "No orders found", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(RetailOrderActivity.this, "Error loading orders: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("RetailOrderActivity", "Error loading orders: " + error.getMessage());
+                Toast.makeText(RetailOrderActivity.this, "Failed to load orders: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                ordersLoading.setVisibility(View.GONE);
+                emptyOrdersText.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -320,18 +373,19 @@ public class RetailOrderActivity extends AppCompatActivity {
                     Toast.makeText(RetailOrderActivity.this, "Order not found", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Map<String, Object> order = (Map<String, Object>) snapshot.getValue();
-                if (order != null && !"pending".equalsIgnoreCase((String) order.get("status"))) {
+                RetailOrder order = snapshot.getValue(RetailOrder.class);
+                if (order != null && !"Pending".equalsIgnoreCase(order.getStatus())) {
                     Toast.makeText(RetailOrderActivity.this, "Only pending orders can be cancelled", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 Map<String, Object> updates = new HashMap<>();
-                updates.put("status", "cancelled");
+                updates.put("status", "Cancelled");
                 updates.put("statusUpdatedAt", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date()));
                 orderRef.updateChildren(updates, (error, ref) -> {
                     if (error == null) {
                         Toast.makeText(RetailOrderActivity.this, "Order cancelled", Toast.LENGTH_SHORT).show();
                     } else {
+                        Log.e("RetailOrderActivity", "Failed to cancel order: " + error.getMessage());
                         Toast.makeText(RetailOrderActivity.this, "Failed to cancel order: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -339,32 +393,35 @@ public class RetailOrderActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(RetailOrderActivity.this, "Error fetching order: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("RetailOrderActivity", "Error fetching order: " + error.getMessage());
+                Toast.makeText(RetailOrderActivity.this, "Failed to retrieve order: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void reorderOrder(Map<String, Object> order) {
+    private void reorderOrder(RetailOrder order) {
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
             Toast.makeText(this, "Please log in to reorder", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Map<String, Object> newOrder = new HashMap<>();
-        newOrder.put("items", order.get("items"));
-        newOrder.put("managerId", user.getUid());
-        newOrder.put("managerName", order.get("managerName"));
-        newOrder.put("managerEmail", order.get("managerEmail"));
-        newOrder.put("status", "pending");
-        newOrder.put("timestamp", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date()));
-        newOrder.put("reorderedFrom", order.get("id"));
+        RetailOrder newOrder = new RetailOrder(
+                new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date()),
+                order.getItems(),
+                order.getManagerEmail(),
+                user.getUid(),
+                "Pending",
+                new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date()),
+                order.getTotal()
+        );
 
         DatabaseReference retailOrdersRef = databaseReference.child("retailOrders");
         retailOrdersRef.push().setValue(newOrder, (error, ref) -> {
             if (error == null) {
                 Toast.makeText(RetailOrderActivity.this, "Reorder placed successfully!", Toast.LENGTH_SHORT).show();
             } else {
+                Log.e("RetailOrderActivity", "Failed to place reorder: " + error.getMessage());
                 Toast.makeText(RetailOrderActivity.this, "Failed to place reorder: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

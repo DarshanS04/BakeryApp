@@ -3,67 +3,71 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp"
-    android:background="@drawable/border">
+    android:padding="8dp">
 
     <TextView
         android:id="@+id/order_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Order ID: "
-        android:textStyle="bold"/>
+        android:textSize="16sp"/>
 
     <TextView
         android:id="@+id/order_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Date: "/>
+        android:text="Date: "
+        android:textSize="16sp"/>
 
     <TextView
         android:id="@+id/order_materials"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Materials: "/>
+        android:text="Materials: "
+        android:textSize="16sp"/>
 
     <TextView
         android:id="@+id/order_total"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Total: "/>
+        android:text="Total: "
+        android:textSize="16sp"/>
 
     <TextView
         android:id="@+id/order_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Status: "/>
+        android:text="Status: "
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/rejection_reason"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reason: "
+        android:textSize="16sp"
+        android:visibility="gone"/>
 
     <LinearLayout
-        android:id="@+id/action_container"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/cancel_button"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Cancel"
             android:visibility="gone"/>
 
         <Button
             android:id="@+id/reorder_button"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Reorder"
             android:visibility="gone"/>
 
-        <TextView
-            android:id="@+id/rejection_reason"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Reason: "
-            android:visibility="gone"/>
-
     </LinearLayout>
-
 </LinearLayout>

@@ -21,7 +21,6 @@ public class RetailOrderAdapter extends RecyclerView.Adapter<RetailOrderAdapter.
     public interface OnOrderActionListener {
         void onAccept(String orderId);
         void onReject(String orderId);
-        void onComplete(String orderId);
     }
 
     public RetailOrderAdapter(OnOrderActionListener actionListener) {
@@ -46,85 +45,67 @@ public class RetailOrderAdapter extends RecyclerView.Adapter<RetailOrderAdapter.
         RetailOrder order = orders.get(position);
 
         // Order ID (last 6 chars)
-        holder.orderIdTextView.setText(order.getId().substring(Math.max(0, order.getId().length() - 6)));
+        holder.orderIdTextView.setText(order.getId() != null ? order.getId().substring(Math.max(0, order.getId().length() - 6)) : "N/A");
 
-        // Date (formatted)
-        try {
-            Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(order.getTimestamp());
-            holder.dateTextView.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.US).format(date));
-        } catch (Exception e) {
-            holder.dateTextView.setText(order.getDate() != null ? order.getDate() : "N/A");
-        }
+        // Date (use getDate directly)
+        holder.dateTextView.setText(order.getDate() != null ? order.getDate() : "N/A");
 
-        // Products (material, quantity)
+        // Products (materialName, quantity)
         StringBuilder products = new StringBuilder();
-        for (RetailOrderItem item : order.getItems()) {
-            products.append(item.getMaterial()).append(" (").append(item.getQuantity()).append(")\n");
+        if (order.getItems() != null) {
+            for (RetailOrder.OrderItem item : order.getItems()) {
+                products.append(item.getMaterialName()).append(" (").append(item.getQuantity()).append(")\n");
+            }
         }
-        holder.productsTextView.setText(products.toString().trim());
+        holder.productsTextView.setText(products.length() > 0 ? products.toString().trim() : "None");
 
         // Manager
-        holder.managerTextView.setText(order.getManagerName() != null ? order.getManagerName() : "Unknown");
+        holder.managerTextView.setText(order.getManagerEmail() != null ? order.getManagerEmail() : "Unknown");
 
         // Total
-        int total = order.getTotal() > 0 ? order.getTotal() : calculateTotal(order.getItems());
-        holder.totalTextView.setText(total + " rupees");
+        double total = order.getTotal();
+        holder.totalTextView.setText(String.format(Locale.US, "%.2f rupees", total));
 
         // Status (with styling)
-        holder.statusTextView.setText(order.getStatus());
-        setStatusStyle(holder.statusTextView, order.getStatus());
+        String status = order.getStatus() != null ? order.getStatus() : "Unknown";
+        holder.statusTextView.setText(status);
+        setStatusStyle(holder.statusTextView, status);
 
         // Actions
         holder.acceptButton.setVisibility(View.GONE);
         holder.rejectButton.setVisibility(View.GONE);
-        holder.completeButton.setVisibility(View.GONE);
 
-        if ("pending".equalsIgnoreCase(order.getStatus())) {
+        if ("Pending".equalsIgnoreCase(status)) {
             holder.acceptButton.setVisibility(View.VISIBLE);
             holder.rejectButton.setVisibility(View.VISIBLE);
             holder.acceptButton.setOnClickListener(v -> actionListener.onAccept(order.getId()));
             holder.rejectButton.setOnClickListener(v -> actionListener.onReject(order.getId()));
-        } else if ("accepted".equalsIgnoreCase(order.getStatus())) {
-            holder.completeButton.setVisibility(View.VISIBLE);
-            holder.completeButton.setOnClickListener(v -> actionListener.onComplete(order.getId()));
         }
     }
 
-    private int calculateTotal(List<RetailOrderItem> items) {
-        if (items == null) return 0;
-        int total = 0;
-        for (RetailOrderItem item : items) {
-            if (item.getTotal() > 0) {
-                total += item.getTotal();
-            } else {
-                String priceStr = item.getPrice() != null ? item.getPrice().replaceAll("[^0-9]", "") : "0";
-                int price = Integer.parseInt(priceStr.isEmpty() ? "0" : priceStr);
-                total += price * item.getQuantity();
-            }
+    private double calculateTotal(List<RetailOrder.OrderItem> items) {
+        if (items == null) return 0.0;
+        double total = 0.0;
+        for (RetailOrder.OrderItem item : items) {
+            total += item.getTotal();
         }
         return total;
     }
 
     private void setStatusStyle(TextView statusTextView, String status) {
-        int color;
+        int colorRes;
         switch (status != null ? status.toLowerCase() : "") {
             case "pending":
-                color = 0xFFFFA500; // Orange
-                break;
-            case "accepted":
-                color = 0xFF4CAF50; // Green
-                break;
-            case "completed":
-                color = 0xFF2196F3; // Blue
+                colorRes = android.R.color.holo_orange_light;
                 break;
             case "rejected":
             case "cancelled":
-                color = 0xFFF44336; // Red
+                colorRes = android.R.color.holo_red_light;
                 break;
             default:
-                color = 0xFF000000; // Black
+                colorRes = android.R.color.black;
         }
-        statusTextView.setTextColor(color);
+        statusTextView.setTextColor(statusTextView.getContext().getResources().getColor(colorRes));
     }
 
     @Override
@@ -134,7 +115,7 @@ public class RetailOrderAdapter extends RecyclerView.Adapter<RetailOrderAdapter.
 
     static class OrderViewHolder extends RecyclerView.ViewHolder {
         TextView orderIdTextView, dateTextView, productsTextView, managerTextView, totalTextView, statusTextView;
-        Button acceptButton, rejectButton, completeButton;
+        Button acceptButton, rejectButton;
 
         public OrderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -146,7 +127,6 @@ public class RetailOrderAdapter extends RecyclerView.Adapter<RetailOrderAdapter.
             statusTextView = itemView.findViewById(R.id.order_status);
             acceptButton = itemView.findViewById(R.id.accept_button);
             rejectButton = itemView.findViewById(R.id.reject_button);
-            completeButton = itemView.findViewById(R.id.complete_button);
         }
     }
 }
