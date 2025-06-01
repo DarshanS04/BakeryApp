@@ -53,6 +53,10 @@
         <activity android:name=".ManagerOrdersActivity" />
 
 
+        <activity android:name=".ExpiryTrackingActivity" />
+
+
+
 
 
 
