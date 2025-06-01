@@ -57,6 +57,8 @@
 
         <activity android:name=".RetailOrderActivity" />
 
+        <activity android:name=".CustomerFeedbackActivity" />
+
 
 
 
