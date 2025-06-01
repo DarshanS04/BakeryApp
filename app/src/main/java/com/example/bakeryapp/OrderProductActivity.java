@@ -94,6 +94,7 @@ public class OrderProductActivity extends AppCompatActivity {
                         }
                     });
             binding.orderItemsRecyclerView.setAdapter(adapter);
+            binding.descriptionInput.setText(""); // Clear description
             updateTotalCost();
         });
 
@@ -135,7 +136,7 @@ public class OrderProductActivity extends AppCompatActivity {
         productImageResIds.put("Samosa", R.drawable.samosa);
         productImageResIds.put("Veg Puff", R.drawable.veg_puff);
         productImageResIds.put("Cheese Sandwich", R.drawable.cheese_sandwich);
-        productImageResIds.put("Bread Pakora", R.drawable.bread_pakora);
+        productImageResIds.put("Bread Pakora", R.drawable.bread);
     }
 
     private void loadAvailableProducts() {
@@ -222,6 +223,12 @@ public class OrderProductActivity extends AppCompatActivity {
             return;
         }
 
+        String description = binding.descriptionInput.getText().toString().trim();
+        if (description.isEmpty()) {
+            Toast.makeText(this, "Please enter an order description", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String userId = mAuth.getCurrentUser().getUid();
         String userEmail = mAuth.getCurrentUser().getEmail();
 
@@ -258,7 +265,7 @@ public class OrderProductActivity extends AppCompatActivity {
                                 new AlertDialog.Builder(this)
                                         .setTitle("Payment Method")
                                         .setMessage("Select Cash on Delivery?")
-                                        .setPositiveButton("Yes, Cash", (dialog3, which3) -> placeOrderFinal(userId, userEmail, validItems, phoneNumber, deliveryAddress, "cash"))
+                                        .setPositiveButton("Yes, Cash", (dialog3, which3) -> placeOrderFinal(userId, userEmail, validItems, phoneNumber, deliveryAddress, "cash", description))
                                         .setNegativeButton("Cancel", null)
                                         .show();
                             })
@@ -269,7 +276,7 @@ public class OrderProductActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void placeOrderFinal(String customerId, String customerEmail, List<OrderItem> items, String phoneNumber, String deliveryAddress, String paymentMethod) {
+    private void placeOrderFinal(String customerId, String customerEmail, List<OrderItem> items, String phoneNumber, String deliveryAddress, String paymentMethod, String description) {
         CustomerOrder order = new CustomerOrder();
         order.setCustomerId(customerId);
         order.setCustomerEmail(customerEmail);
@@ -280,6 +287,7 @@ public class OrderProductActivity extends AppCompatActivity {
         order.setDeliveryAddress(deliveryAddress);
         order.setPhoneNumber(phoneNumber);
         order.setPaymentMethod(paymentMethod);
+        order.setDescription(description); // Set description
 
         ordersRef.push().setValue(order, (error, ref) -> {
             if (error == null) {
@@ -291,7 +299,7 @@ public class OrderProductActivity extends AppCompatActivity {
                 // Update product history
                 updateProductHistory(customerId, items);
 
-                // Clear order
+                // Clear order and description
                 adapter = new OrderItemAdapter(this, availableProducts, productPrices, productImageResIds,
                         new OrderItemAdapter.OnOrderItemChangeListener() {
                             @Override
@@ -305,6 +313,7 @@ public class OrderProductActivity extends AppCompatActivity {
                             }
                         });
                 binding.orderItemsRecyclerView.setAdapter(adapter);
+                binding.descriptionInput.setText(""); // Clear description
                 updateTotalCost();
             } else {
                 Log.e("OrderProduct", "Error placing order: " + error.getMessage());
@@ -332,7 +341,7 @@ public class OrderProductActivity extends AppCompatActivity {
                                 Log.e("OrderProduct", "Invalid quantity format in inventory for " + product);
                             }
                         }
-                        productData.put("quantity", currentQuantity - item.getQuantity());
+                        productData.put("quantity", String.valueOf(currentQuantity - item.getQuantity())); // Store as String
                         inventory.put(product, productData);
                     }
                 }

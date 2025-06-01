@@ -10,23 +10,22 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
+    private List<Order> orders;
+    private OnExecuteClickListener executeClickListener;
+    private OnViewBillClickListener viewBillClickListener;
 
-    private List<Order> orderList;
-    private OnExecuteOrderListener executeOrderListener;
-    private OnViewBillListener viewBillListener;
-
-    public interface OnExecuteOrderListener {
-        void onExecuteOrder(String orderId);
+    public interface OnExecuteClickListener {
+        void onExecuteClick(String orderId);
     }
 
-    public interface OnViewBillListener {
-        void onViewBill(String billId);
+    public interface OnViewBillClickListener {
+        void onViewBillClick(String billId);
     }
 
-    public OrderAdapter(List<Order> orderList, OnExecuteOrderListener executeOrderListener, OnViewBillListener viewBillListener) {
-        this.orderList = orderList;
-        this.executeOrderListener = executeOrderListener;
-        this.viewBillListener = viewBillListener;
+    public OrderAdapter(List<Order> orders, OnExecuteClickListener executeClickListener, OnViewBillClickListener viewBillClickListener) {
+        this.orders = orders;
+        this.executeClickListener = executeClickListener;
+        this.viewBillClickListener = viewBillClickListener;
     }
 
     @NonNull
@@ -38,46 +37,44 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
     @Override
     public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
-        Order order = orderList.get(position);
-        holder.orderIdText.setText(order.getId().substring(order.getId().length() - 6));
-        holder.customerText.setText(order.getCustomerEmail() != null ? order.getCustomerEmail() : "N/A");
-        StringBuilder itemsStr = new StringBuilder();
-        for (Item item : order.getItems()) {
-            itemsStr.append(item.getProduct()).append(" x").append(item.getQuantity()).append("\n");
-        }
-        holder.itemsText.setText(itemsStr.toString().trim());
-        holder.totalText.setText("₹" + order.getTotalAmount());
-        holder.statusText.setText(order.getStatus() != null ? order.getStatus() : "pending");
+        Order order = orders.get(position);
+        holder.orderIdText.setText("Order ID: " + (order.getId() != null ? order.getId() : "N/A"));
+        holder.customerEmailText.setText("Customer: " + (order.getCustomerEmail() != null ? order.getCustomerEmail() : "N/A"));
+        holder.totalAmountText.setText("Total: ₹" + order.getTotalAmount());
+        holder.statusText.setText("Status: " + (order.getStatus() != null ? order.getStatus() : "N/A"));
+        holder.descriptionText.setText("Description: " + (order.getDescription() != null && !order.getDescription().isEmpty() ? order.getDescription() : "None"));
 
-        if (order.getBillId() != null) {
-            holder.actionButton.setText("View Bill");
-            holder.actionButton.setOnClickListener(v -> viewBillListener.onViewBill(order.getBillId()));
-        } else if (!"completed".equals(order.getStatus()) && !"cancelled".equals(order.getStatus())) {
-            holder.actionButton.setText("Execute Order");
-            holder.actionButton.setOnClickListener(v -> executeOrderListener.onExecuteOrder(order.getId()));
-        } else {
-            holder.actionButton.setText("N/A");
-            holder.actionButton.setEnabled(false);
-        }
+        // Enable/disable execute button based on status
+        holder.executeButton.setEnabled(!"completed".equals(order.getStatus()));
+        holder.executeButton.setOnClickListener(v -> executeClickListener.onExecuteClick(order.getId()));
+
+        // Show/hide view bill button based on billId
+        holder.viewBillButton.setVisibility(order.getBillId() != null ? View.VISIBLE : View.GONE);
+        holder.viewBillButton.setOnClickListener(v -> {
+            if (order.getBillId() != null) {
+                viewBillClickListener.onViewBillClick(order.getBillId());
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return orderList.size();
+        return orders.size();
     }
 
     static class OrderViewHolder extends RecyclerView.ViewHolder {
-        TextView orderIdText, customerText, itemsText, totalText, statusText;
-        Button actionButton;
+        TextView orderIdText, customerEmailText, totalAmountText, statusText, descriptionText;
+        Button executeButton, viewBillButton;
 
-        OrderViewHolder(@NonNull View itemView) {
+        OrderViewHolder(View itemView) {
             super(itemView);
             orderIdText = itemView.findViewById(R.id.orderIdText);
-            customerText = itemView.findViewById(R.id.customerText);
-            itemsText = itemView.findViewById(R.id.itemsText);
-            totalText = itemView.findViewById(R.id.totalText);
+            customerEmailText = itemView.findViewById(R.id.customerEmailText);
+            totalAmountText = itemView.findViewById(R.id.totalAmountText);
             statusText = itemView.findViewById(R.id.statusText);
-            actionButton = itemView.findViewById(R.id.actionButton);
+            descriptionText = itemView.findViewById(R.id.descriptionText);
+            executeButton = itemView.findViewById(R.id.executeButton);
+            viewBillButton = itemView.findViewById(R.id.viewBillButton);
         }
     }
 }
