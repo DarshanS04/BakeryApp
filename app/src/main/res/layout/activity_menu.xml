@@ -4,9 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="@drawable/backgroundimageapp"
-
-    >
+    android:background="@drawable/backgroundimageapp">
 
     <TextView
         android:id="@+id/title"
@@ -19,6 +17,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/specialCakeButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Click here for special cake"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title" />
+
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
@@ -27,7 +35,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
+        app:layout_constraintTop_toBottomOf="@id/specialCakeButton" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/menu_recycler_view"
@@ -37,6 +45,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
+        app:layout_constraintTop_toBottomOf="@id/specialCakeButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

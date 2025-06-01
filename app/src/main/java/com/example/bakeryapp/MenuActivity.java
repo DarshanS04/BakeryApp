@@ -1,11 +1,18 @@
 package com.example.bakeryapp;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.example.bakeryapp.databinding.ActivityMenuBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -27,6 +34,32 @@ public class MenuActivity extends AppCompatActivity {
     private List<Product> products = new ArrayList<>();
     private Map<String, Integer> productPrices = new HashMap<>();
     private Map<String, Integer> productImageResIds = new HashMap<>();
+
+    // Array to store special cake prices
+    private final String[] specialCakePrices = {
+            "cake01:300",
+            "cake02:900",
+            "cake03:400",
+            "cake04:700",
+            "cake05:500",
+            "cake06:1000",
+            "cake07:200",
+            "cake08:800",
+            "cake09:600"
+    };
+
+    // Array to store corresponding drawable resource IDs
+    private final int[] specialCakeImages = {
+            R.drawable.cake01,
+            R.drawable.cake02,
+            R.drawable.cake03,
+            R.drawable.cake04,
+            R.drawable.cake05,
+            R.drawable.cake06,
+            R.drawable.cake07,
+            R.drawable.cake08,
+            R.drawable.cake09
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +94,20 @@ public class MenuActivity extends AppCompatActivity {
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.menuRecyclerView.setVisibility(View.GONE);
 
+        // Set up special cake button
+        binding.specialCakeButton.setOnClickListener(v -> showSpecialCakes());
+
+        // Set up order product button
+//        binding.orderProductButton.setOnClickListener(v -> {
+//            Intent intent = new Intent(MenuActivity.this, OrderProductActivity.class);
+//            startActivity(intent);
+//        });
+
         // Load products
         loadProducts();
     }
 
     private void initializeProductData() {
-        // Same as OrderProductActivity
         productPrices.put("Bread", 35);
         productPrices.put("Cake", 350);
         productPrices.put("Pastry", 90);
@@ -151,5 +192,53 @@ public class MenuActivity extends AppCompatActivity {
                 binding.menuRecyclerView.setVisibility(View.VISIBLE);
             }
         });
+    }
+
+    private void showSpecialCakes() {
+        List<SpecialCake> cakeList = new ArrayList<>();
+        // Populate the list of special cakes
+        for (int i = 0; i < specialCakePrices.length; i++) {
+            String cakeEntry = specialCakePrices[i];
+            if (cakeEntry.trim().isEmpty()) continue;
+            String[] parts = cakeEntry.split(":");
+            if (parts.length == 2) {
+                String cakeCode = parts[0].trim();
+                int price = Integer.parseInt(parts[1].trim());
+                int imageResId = specialCakeImages[i];
+                cakeList.add(new SpecialCake(cakeCode, price, imageResId));
+            }
+        }
+
+        if (cakeList.isEmpty()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Special Cakes")
+                    .setMessage("No special cakes available.")
+                    .setPositiveButton("OK", null)
+                    .show();
+            return;
+        }
+
+        // Create a custom dialog
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_special_cakes);
+
+        // Adjust dialog width to 90% of screen width
+        WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
+        layoutParams.copyFrom(dialog.getWindow().getAttributes());
+        layoutParams.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.9);
+        layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        dialog.getWindow().setAttributes(layoutParams);
+
+        // Set up the RecyclerView
+        RecyclerView recyclerView = dialog.findViewById(R.id.specialCakesRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        SpecialCakeAdapter adapter = new SpecialCakeAdapter(this, cakeList);
+        recyclerView.setAdapter(adapter);
+
+        // Set up the close button
+        Button closeButton = dialog.findViewById(R.id.closeButton);
+        closeButton.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 }
