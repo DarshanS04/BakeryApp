@@ -29,11 +29,11 @@ public class AddExpenseActivity extends AppCompatActivity {
         expensesRef = FirebaseDatabase.getInstance().getReference("expenses");
         selectedDate = Calendar.getInstance();
 
-        // Populate category dropdown
-        String[] categories = {"Ingredients", "Utilities", "Labor", "Equipment", "Rent", "Marketing", "Other"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categories);
+        // Populate type dropdown
+        String[] types = {"ingredients", "utilities", "labor", "equipment", "rent", "marketing", "other"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, types);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.categorySpinner.setAdapter(adapter);
+        binding.typeSpinner.setAdapter(adapter);
 
         // Set up date picker
         binding.dateEditText.setOnClickListener(v -> showDatePickerDialog());
@@ -41,10 +41,9 @@ public class AddExpenseActivity extends AppCompatActivity {
         // Check for edit
         editItem = (ExpenseItem) getIntent().getSerializableExtra("item");
         if (editItem != null) {
-            binding.categorySpinner.setSelection(adapter.getPosition(editItem.getCategory()));
-            binding.amountEditText.setText(editItem.getAmount());
+            binding.typeSpinner.setSelection(adapter.getPosition(editItem.getType()));
+            binding.amountEditText.setText(String.valueOf(editItem.getAmount()));
             binding.dateEditText.setText(editItem.getDate());
-            binding.descriptionEditText.setText(editItem.getDescription());
             binding.submitButton.setText("Update Expense");
             // Set selected date for edit
             try {
@@ -80,19 +79,19 @@ public class AddExpenseActivity extends AppCompatActivity {
     }
 
     private void submitItem() {
-        String category = binding.categorySpinner.getSelectedItem() != null ? binding.categorySpinner.getSelectedItem().toString() : "";
-        String amount = binding.amountEditText.getText().toString().trim();
+        String type = binding.typeSpinner.getSelectedItem() != null ? binding.typeSpinner.getSelectedItem().toString() : "";
+        String amountStr = binding.amountEditText.getText().toString().trim();
         String date = binding.dateEditText.getText().toString().trim();
-        String description = binding.descriptionEditText.getText().toString().trim();
 
-        if (category.isEmpty() || amount.isEmpty() || date.isEmpty()) {
+        if (type.isEmpty() || amountStr.isEmpty() || date.isEmpty()) {
             Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        double amount;
         try {
-            double amt = Double.parseDouble(amount);
-            if (amt <= 0) {
+            amount = Double.parseDouble(amountStr);
+            if (amount <= 0) {
                 Toast.makeText(this, "Amount must be positive", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -113,7 +112,7 @@ public class AddExpenseActivity extends AppCompatActivity {
 
         String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).format(new Date());
 
-        ExpenseItem item = new ExpenseItem(category, amount, date, description.isEmpty() ? null : description, timestamp);
+        ExpenseItem item = new ExpenseItem(amount, date, timestamp, type);
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.submitButton.setEnabled(false);
 

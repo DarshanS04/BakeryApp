@@ -61,7 +61,7 @@ public class ExpensesActivity extends AppCompatActivity {
                 for (DataSnapshot item : snapshot.getChildren()) {
                     try {
                         ExpenseItem expenseItem = item.getValue(ExpenseItem.class);
-                        if (expenseItem != null && expenseItem.getCategory() != null && expenseItem.getAmount() != null) {
+                        if (expenseItem != null && expenseItem.getType() != null && expenseItem.getAmount() != 0) {
                             expenseItem.setKey(item.getKey());
                             expenseItems.add(expenseItem);
                         } else {

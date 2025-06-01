@@ -7,68 +7,59 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.material.button.MaterialButton;
 import java.util.List;
-import java.util.Locale;
 
-public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ViewHolder> {
-    private List<ExpenseItem> items;
-    private OnEditClickListener editListener;
-    private OnDeleteClickListener deleteListener;
+public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder> {
     private Context context;
+    private List<ExpenseItem> expenseItems;
+    private OnItemActionListener editListener;
+    private OnItemActionListener deleteListener;
 
-    public interface OnEditClickListener {
-        void onEditClick(ExpenseItem item);
+    public interface OnItemActionListener {
+        void onAction(ExpenseItem item);
     }
 
-    public interface OnDeleteClickListener {
-        void onDeleteClick(ExpenseItem item);
-    }
-
-    public ExpenseAdapter(Context context, List<ExpenseItem> items, OnEditClickListener editListener, OnDeleteClickListener deleteListener) {
+    public ExpenseAdapter(Context context, List<ExpenseItem> expenseItems,
+                          OnItemActionListener editListener, OnItemActionListener deleteListener) {
         this.context = context;
-        this.items = items;
+        this.expenseItems = expenseItems;
         this.editListener = editListener;
         this.deleteListener = deleteListener;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_expense, parent, false);
-        return new ViewHolder(view);
+    public ExpenseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_expense, parent, false);
+        return new ExpenseViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ExpenseItem item = items.get(position);
-        holder.serialNumberTextView.setText(String.valueOf(position + 1));
-        holder.categoryTextView.setText(item.getCategory());
-        holder.amountTextView.setText(String.format(Locale.US, "%.2f", item.getAmountAsDouble()));
-        holder.dateTextView.setText(item.getDate());
-        holder.descriptionTextView.setText(item.getDescription() != null ? item.getDescription() : "-");
-        holder.editButton.setOnClickListener(v -> editListener.onEditClick(item));
-        holder.deleteButton.setOnClickListener(v -> deleteListener.onDeleteClick(item));
+    public void onBindViewHolder(@NonNull ExpenseViewHolder holder, int position) {
+        ExpenseItem item = expenseItems.get(position);
+        holder.typeTextView.setText("Type: " + item.getType());
+        holder.amountTextView.setText("Amount: ₹" + item.getAmount());
+        holder.dateTextView.setText("Date: " + item.getDate());
+        holder.editButton.setOnClickListener(v -> editListener.onAction(item));
+        holder.deleteButton.setOnClickListener(v -> deleteListener.onAction(item));
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return expenseItems.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView serialNumberTextView, categoryTextView, amountTextView, dateTextView, descriptionTextView;
-        MaterialButton editButton, deleteButton;
+    static class ExpenseViewHolder extends RecyclerView.ViewHolder {
+        TextView typeTextView, amountTextView, dateTextView;
+        View editButton, deleteButton;
 
-        ViewHolder(View itemView) {
+        ExpenseViewHolder(@NonNull View itemView) {
             super(itemView);
-            serialNumberTextView = itemView.findViewById(R.id.serial_number);
-            categoryTextView = itemView.findViewById(R.id.category);
-            amountTextView = itemView.findViewById(R.id.amount);
-            dateTextView = itemView.findViewById(R.id.date);
-            descriptionTextView = itemView.findViewById(R.id.description);
-            editButton = itemView.findViewById(R.id.edit_button);
-            deleteButton = itemView.findViewById(R.id.delete_button);
+            typeTextView = itemView.findViewById(R.id.typeTextView);
+            amountTextView = itemView.findViewById(R.id.amountTextView);
+            dateTextView = itemView.findViewById(R.id.dateTextView);
+            editButton = itemView.findViewById(R.id.editButton);
+            deleteButton = itemView.findViewById(R.id.deleteButton);
         }
     }
 }
