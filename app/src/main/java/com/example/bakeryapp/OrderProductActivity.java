@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -36,6 +37,7 @@ public class OrderProductActivity extends AppCompatActivity {
     private Map<String, Integer> productPrices = new HashMap<>();
     private Map<String, Integer> productImageResIds = new HashMap<>();
     private ProgressBar progressBar;
+    private ArrayAdapter<String> paymentMethodAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +73,9 @@ public class OrderProductActivity extends AppCompatActivity {
         // Set up RecyclerView (adapter will be set after products load)
         binding.orderItemsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        // Set up payment method spinner
+        setupPaymentMethodSpinner();
+
         // Load available products
         loadAvailableProducts();
 
@@ -95,10 +100,32 @@ public class OrderProductActivity extends AppCompatActivity {
                     });
             binding.orderItemsRecyclerView.setAdapter(adapter);
             binding.descriptionInput.setText(""); // Clear description
+            binding.paymentMethodSpinner.setSelection(0); // Reset to "Cash"
+            binding.qrCodeImage.setVisibility(View.GONE); // Hide QR code
             updateTotalCost();
         });
 
         binding.placeOrderButton.setOnClickListener(v -> placeOrder());
+    }
+
+    private void setupPaymentMethodSpinner() {
+        String[] paymentMethods = {"Cash", "Net Banking"};
+        paymentMethodAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, paymentMethods);
+        paymentMethodAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.paymentMethodSpinner.setAdapter(paymentMethodAdapter);
+
+        binding.paymentMethodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedMethod = paymentMethods[position];
+                binding.qrCodeImage.setVisibility(selectedMethod.equals("Net Banking") ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                binding.qrCodeImage.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void initializeProductData() {
@@ -229,6 +256,7 @@ public class OrderProductActivity extends AppCompatActivity {
             return;
         }
 
+        String paymentMethod = binding.paymentMethodSpinner.getSelectedItem().toString().toLowerCase();
         String userId = mAuth.getCurrentUser().getUid();
         String userEmail = mAuth.getCurrentUser().getEmail();
 
@@ -261,13 +289,7 @@ public class OrderProductActivity extends AppCompatActivity {
                                     return;
                                 }
 
-                                // Payment method
-                                new AlertDialog.Builder(this)
-                                        .setTitle("Payment Method")
-                                        .setMessage("Select Cash on Delivery?")
-                                        .setPositiveButton("Yes, Cash", (dialog3, which3) -> placeOrderFinal(userId, userEmail, validItems, phoneNumber, deliveryAddress, "cash", description))
-                                        .setNegativeButton("Cancel", null)
-                                        .show();
+                                placeOrderFinal(userId, userEmail, validItems, phoneNumber, deliveryAddress, paymentMethod, description);
                             })
                             .setNegativeButton("Cancel", null)
                             .show();
@@ -287,7 +309,7 @@ public class OrderProductActivity extends AppCompatActivity {
         order.setDeliveryAddress(deliveryAddress);
         order.setPhoneNumber(phoneNumber);
         order.setPaymentMethod(paymentMethod);
-        order.setDescription(description); // Set description
+        order.setDescription(description);
 
         ordersRef.push().setValue(order, (error, ref) -> {
             if (error == null) {
@@ -299,7 +321,7 @@ public class OrderProductActivity extends AppCompatActivity {
                 // Update product history
                 updateProductHistory(customerId, items);
 
-                // Clear order and description
+                // Clear order, description, payment method, and QR code
                 adapter = new OrderItemAdapter(this, availableProducts, productPrices, productImageResIds,
                         new OrderItemAdapter.OnOrderItemChangeListener() {
                             @Override
@@ -313,7 +335,9 @@ public class OrderProductActivity extends AppCompatActivity {
                             }
                         });
                 binding.orderItemsRecyclerView.setAdapter(adapter);
-                binding.descriptionInput.setText(""); // Clear description
+                binding.descriptionInput.setText("");
+                binding.paymentMethodSpinner.setSelection(0); // Reset to "Cash"
+                binding.qrCodeImage.setVisibility(View.GONE); // Hide QR code
                 updateTotalCost();
             } else {
                 Log.e("OrderProduct", "Error placing order: " + error.getMessage());
@@ -341,7 +365,7 @@ public class OrderProductActivity extends AppCompatActivity {
                                 Log.e("OrderProduct", "Invalid quantity format in inventory for " + product);
                             }
                         }
-                        productData.put("quantity", String.valueOf(currentQuantity - item.getQuantity())); // Store as String
+                        productData.put("quantity", String.valueOf(currentQuantity - item.getQuantity()));
                         inventory.put(product, productData);
                     }
                 }
