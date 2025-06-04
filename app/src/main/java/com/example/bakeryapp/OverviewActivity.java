@@ -185,15 +185,23 @@ public class OverviewActivity extends AppCompatActivity {
                     HashMap<String, Integer> productQuantities = new HashMap<>();
                     for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
                         String productName = itemSnapshot.child("name").getValue(String.class);
-                        // Read quantity as String and parse to Integer
-                        String quantityStr = itemSnapshot.child("quantity").getValue(String.class);
+                        // Read quantity as Object to handle both String and Long
+                        Object quantityObj = itemSnapshot.child("quantity").getValue();
                         Integer quantity = 0; // Default value
-                        if (quantityStr != null) {
+                        if (quantityObj != null) {
                             try {
-                                quantity = Integer.parseInt(quantityStr);
+                                if (quantityObj instanceof String) {
+                                    quantity = Integer.parseInt((String) quantityObj);
+                                } else if (quantityObj instanceof Long) {
+                                    quantity = ((Long) quantityObj).intValue();
+                                } else {
+                                    Log.e("OverviewActivity", "Unexpected quantity type for " + productName + ": " + quantityObj.getClass().getName());
+                                }
                             } catch (NumberFormatException e) {
-                                Log.e("OverviewActivity", "Invalid quantity format for " + productName + ": " + quantityStr);
+                                Log.e("OverviewActivity", "Invalid quantity format for " + productName + ": " + quantityObj, e);
                             }
+                        } else {
+                            Log.w("OverviewActivity", "Quantity is null for " + productName);
                         }
                         if (productName != null) {
                             productQuantities.put(productName, productQuantities.getOrDefault(productName, 0) + quantity);
